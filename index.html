@@ -491,6 +491,18 @@
                 </select>
             </div>
 
+            <!-- Nearby Wall Filter Checkbox -->
+            <label class="bubble-ctrls" style="cursor: pointer; user-select: none; gap: 4px; margin-right: 2px;" title="حصر التنبيهات في العقود القريبة فقط من السعر الحالي وتجاهل البعيدة">
+                <input type="checkbox" id="chkNearbyAlerts" onchange="toggleNearbyAlerts(this.checked)" checked style="cursor: pointer; accent-color: var(--accent); width: 13px; height: 13px;">
+                <span>🎯 قريبة:</span>
+                <select id="nearbyDistSelect" onchange="changeNearbyDist(this.value)" onclick="event.stopPropagation()" title="النطاق المسموح به للتنبيهات">
+                    <option value="500">± 500$</option>
+                    <option value="1000" selected>± 1000$</option>
+                    <option value="2000">± 2000$</option>
+                    <option value="visible">ضمن الشاشة 🖥️</option>
+                </select>
+            </label>
+
             <button class="btn-action" id="btnAlertStatus" onclick="toggleAlertWarmup()" title="فترة تجميع السيولة (5 دقائق) - انقر للتفعيل فوراً" style="display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size:0.75rem;">
                 <span id="alertStatusText">⏳ تجميع: 05:00</span>
             </button>
@@ -559,6 +571,8 @@
 
         // Large Wall Alert Settings (5-minute warmup + threshold)
         let alertThreshold = 20; // Default: 20 BTC contracts
+        let nearbyAlertsOnly = true; // Checked by default: filter alerts to nearby contracts only
+        let nearbyDistMode = '1000'; // Default: +/- 1000 USD from current price ('500', '1000', '2000', 'visible')
         const WARMUP_DURATION_MS = 300000; // 5 minutes accumulation period
         const appStartTime = Date.now();
         let isWarmupComplete = false;
@@ -894,7 +908,37 @@
             } catch(e) {}
         }
 
+        function toggleNearbyAlerts(checked) {
+            nearbyAlertsOnly = checked;
+            const sel = document.getElementById('nearbyDistSelect');
+            if (sel) sel.disabled = !checked;
+        }
+
+        function changeNearbyDist(val) {
+            nearbyDistMode = val;
+        }
+
+        function isPriceNearby(price) {
+            if (!nearbyAlertsOnly || !currentPrice) return true;
+
+            if (nearbyDistMode === 'visible') {
+                const step = currentStep;
+                const centerP = viewCenterPrice || currentPrice;
+                const dpr = window.devicePixelRatio || 1;
+                const chartH = (canvas.height / dpr) - CVD_HEIGHT;
+                const visibleTop = centerP + ((chartH / 2) * (step / pixelsPerStep));
+                const visibleBottom = centerP - ((chartH / 2) * (step / pixelsPerStep));
+                return (price >= visibleBottom && price <= visibleTop);
+            } else {
+                const maxDist = parseFloat(nearbyDistMode) || 1000;
+                return Math.abs(price - currentPrice) <= maxDist;
+            }
+        }
+
         function triggerWallAlert(price, qty, isBid) {
+            // Proximity filter: ignore far-away walls if filter is active
+            if (!isPriceNearby(price)) return;
+
             const now = Date.now();
             const lastTime = lastAlertTimes.get(price) || 0;
             // Cooldown of 30s per price level to avoid flickering
@@ -925,6 +969,8 @@
             const sideIcon = isBid ? '🟢' : '🔴';
             const sideLabel = isBid ? 'جدار شراء (Bid)' : 'جدار بيع (Ask)';
             const sideColor = isBid ? '#00e676' : '#ff3344';
+            const dist = currentPrice ? Math.abs(price - currentPrice) : 0;
+            const distLabel = dist ? `<span style="color: #94a3b8; font-size: 0.72rem; font-weight: 500;">(يبعد $${dist.toFixed(0)})</span>` : '';
 
             toast.innerHTML = `
                 <div style="font-size: 1.25rem;">${sideIcon}</div>
@@ -933,8 +979,9 @@
                         <span>${sideLabel}</span>
                         <span><b>${qty.toFixed(2)} BTC</b></span>
                     </div>
-                    <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 2px;">
-                        المستوى: <b style="color: #fff; font-size: 0.8rem;">${price.toLocaleString('en-US')} $</b>
+                    <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 2px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>المستوى: <b style="color: #fff; font-size: 0.8rem;">${price.toLocaleString('en-US')} $</b></span>
+                        ${distLabel}
                     </div>
                 </div>
             `;
