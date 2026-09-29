@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookmap Pro Live | BTC/USDT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0d14;
+            --bg-panel: #111722;
+            --border: #1e2636;
+            --text-main: #e2e8f0;
+            --text-muted: #7b8b9f;
+            --accent: #00e5ff;
+
+            /* Bookmap Exact Colors */
+            --ask-red: #c93636;
+            --ask-bg: #2d1010;
+            --ask-bar: #eb4d4b;
+            --bid-green: #239454;
+            --bid-bg: #092414;
+            --bid-bar: #2ecc71;
+            --current-price: #ff9900;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Top Header */
+        header {
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 100;
+            gap: 8px;
+            direction: ltr;
+        }
+
+        .header-left, .header-center, .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .brand-badge {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .symbol-tag {
+            background: rgba(0, 229, 255, 0.12);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            color: var(--accent);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .live-price-box {
+            background: #080b10;
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #00e676;
+            box-shadow: 0 0 6px #00e676;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+        }
+
+        /* Controls */
+        .ctrl-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: #080b10;
+            border: 1px solid var(--border);
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        .ctrl-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin: 0 4px;
+        }
+
+        .btn-step {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.15s;
+        }
+
+        .btn-step:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-step.active {
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--accent);
+        }
+
+        /* Calculation Mode Toggle (Peak Wall vs Total Sum) */
+        .btn-calc-mode {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-calc-mode:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Bubble Size Multiplier */
+        .bubble-ctrls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+        }
+
+        .bubble-ctrls select {
+            background: #080b10;
+            color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.72rem;
+            font-family: inherit;
+        }
+
+        /* Auto-Follow Toggle */
+        .btn-follow {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 3px 9px;
+            border-radius: 5px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+        }
+
+        .btn-follow.active {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-market-toggle {
+            background: #080b10;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            display: flex;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .btn-mkt {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-mkt.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        /* Main Workspace */
+        .workspace {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: default;
+        }
+
+        #mainCanvas {
+            width: 100%;
+            flex: 1;
+            display: block;
+            background-color: #0e1219;
+            cursor: grab;
+        }
+
+        #mainCanvas:active {
+            cursor: grabbing;
+        }
+
+        /* Floating Return-to-Price Button */
+        .btn-recenter-float {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 22, 32, 0.94);
+            border: 1.5px solid var(--accent);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            gap: 7px;
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            transition: all 0.2s;
+        }
+
+        .btn-recenter-float:hover {
+            background: var(--accent);
+            color: #000;
+            box-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
+        }
+
+        /* Bottom Status Footer */
+        footer {
+            background-color: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 4px 14px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Outfit', 'Noto Sans Arabic', sans-serif;
+            flex-shrink: 0;
+            direction: rtl;
+        }
+
+        .footer-hint {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Alert Toast Notifications */
+        .toast-container {
+            position: absolute;
+            top: 14px;
+            right: 265px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 250;
+            pointer-events: none;
+        }
+
+        .alert-toast {
+            background: rgba(14, 20, 30, 0.96);
+            border-radius: 7px;
+            padding: 9px 14px;
+            color: #fff;
+            font-family: 'JetBrains Mono', 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--border);
+            border-right: 4px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInToast 0.25s ease-out forwards;
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+            direction: rtl;
+        }
+
+        .alert-toast.bid {
+            border-right-color: #00e676;
+            box-shadow: 0 0 16px rgba(0, 230, 118, 0.25);
+        }
+
+        .alert-toast.ask {
+            border-right-color: #ff3344;
+            box-shadow: 0 0 16px rgba(255, 51, 68, 0.25);
+        }
+
+        .alert-toast.iceberg-bid {
+            border-right-color: #00e5ff;
+            box-shadow: 0 0 18px rgba(0, 229, 255, 0.3);
+        }
+
+        .alert-toast.iceberg-ask {
+            border-right-color: #ff9100;
+            box-shadow: 0 0 18px rgba(255, 145, 0, 0.3);
+        }
+
+        .alert-toast.stoprun-sell {
+            border-right-color: #ff1744;
+            box-shadow: 0 0 18px rgba(255, 23, 68, 0.35);
+        }
+
+        .alert-toast.stoprun-buy {
+            border-right-color: #00e676;
+            box-shadow: 0 0 18px rgba(0, 230, 118, 0.35);
+        }
+
+        @keyframes slideInToast {
+            from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeOutToast {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Header -->
+    <header>
+        <div class="header-left">
+            <div class="brand-badge">
+                <span>Bookmap Pro</span>
+                <span class="symbol-tag">BTCUSDT</span>
+            </div>
+
+            <div class="live-price-box">
+                <span class="status-dot" id="wsDot"></span>
+                <span style="color: var(--text-muted); font-size: 0.72rem;">LAST:</span>
+                <span id="headerLastPrice" style="color: #fff;">--.--</span>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <!-- Time Window Controls (Horizontal Time Zoom) -->
+            <div class="ctrl-group">
+                <span class="ctrl-label">⏱️ التوقيت:</span>
+                <button class="btn-step" data-duration="60000" onclick="setTimeWindow(60000)" title="1 دقيقة">1m</button>
+                <button class="btn-step active" data-duration="300000" onclick="setTimeWindow(300000)" title="5 دقائق">5m</button>
+                <button class="btn-step" data-duration="900000" onclick="setTimeWindow(900000)" title="15 دقيقة">15m</button>
+                <button class="btn-step" data-duration="1800000" onclick="setTimeWindow(1800000)" title="30 دقيقة">30m</button>
+                <button class="btn-step" data-duration="3600000" onclick="setTimeWindow(3600000)" title="1 ساعة">1h</button>
+            </div>
+
+            <!-- Liquidity Lines Filter (>= 20 BTC default) -->
+            <div class="bubble-ctrls">
+                <span>خطوط السيولة:</span>
+                <select id="lineFilterSelect" onchange="changeLineFilter(this.value)">
+                    <option value="10">≥ 10 BTC</option>
+                    <option value="20" selected>≥ 20 BTC</option>
+                    <option value="50">≥ 50 BTC</option>
+                    <option value="100">≥ 100 BTC</option>
+                </select>
+            </div>
+
+            <!-- Bubble Controls -->
+            <div class="bubble-ctrls">
+                <span>فقاعات:</span>
+                <select id="bubbleScaleSelect" onchange="changeBubbleScale(this.value)">
+                    <option value="1.0">عادي (1x)</option>
+                    <option value="1.5" selected>واضح (1.5x)</option>
+                    <option value="2.2">كبير (2.2x)</option>
+                </select>
+            </div>
+
+            <!-- Auto-Follow Lock Toggle -->
+            <button class="btn-follow" id="btnFollow" onclick="toggleAutoFollow()" title="تثبيت الشاشة مع حركة السعر">
+                <span id="followIcon">🔓</span>
+                <span id="followText">تثبيت (Off)</span>
+            </button>
+
+            <!-- Large Wall Alerts Control -->
+            <div class="bubble-ctrls" style="margin-right: 2px;">
+                <span>🔔 تنبيه الجدران:</span>
+                <select id="alertThresholdSelect" onchange="changeAlertThreshold(this.value)">
+                    <option value="0">معطل (Off)</option>
+                    <option value="10">≥ 10 BTC</option>
+                    <option value="20" selected>≥ 20 BTC</option>
+                    <option value="30">≥ 30 BTC</option>
+                    <option value="50">≥ 50 BTC</option>
+                    <option value="100">≥ 100 BTC</option>
+                </select>
+            </div>
+
+            <button class="btn-action" id="btnAlertStatus" onclick="toggleAlertWarmup()" title="فترة تجميع السيولة (5 دقائق) - انقر للتفعيل فوراً" style="display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono', monospace; font-size:0.75rem;">
+                <span id="alertStatusText">⏳ تجميع: 05:00</span>
+            </button>
+
+            <!-- Stops & Icebergs Tracker Control -->
+            <div class="bubble-ctrls" style="margin-right: 2px;">
+                <span>🧊 رصد:</span>
+                <select id="trackerModeSelect" onchange="changeTrackerMode(this.value)" title="تعقب الأوامر الجليدية (Icebergs) وضرب الستوبات (Stop Runs)">
+                    <option value="all" selected>الآيسبيرغ & الستوبات</option>
+                    <option value="iceberg">آيسبيرغ فقط 🧊</option>
+                    <option value="stops">ستوبات فقط ⛔</option>
+                    <option value="off">معطل (Off)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Unified Canvas Workspace -->
+    <div class="workspace">
+        <canvas id="mainCanvas"></canvas>
+
+        <!-- Toast Notifications Container -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Floating Return-to-Price Button -->
+        <button class="btn-recenter-float" id="btnRecenter" onclick="centerOnCurrentPrice()">
+            <span>🎯</span>
+            <span>العودة لمستوى السعر الحالي (<span id="recenterPriceVal">--</span> $)</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-hint">
+            <span>🖱️ <b>اسحب بالفأرة (Drag)</b> بحرية عمودياً وأفقياً</span>
+            <span>🎡 <b>عجلة الماوس فوق الشارت:</b> زوم أفقي (الوقت) | <b>فوق سلم الأسعار الأيمن:</b> زوم عمودي (السعر)</span>
+            <span>⌨️ اضغط <b>Spacebar</b> للعودة الفورية</span>
+        </div>
+        <div style="direction: ltr; font-family: 'JetBrains Mono', monospace;">
+            <span id="statusFooter">Live Binance BTC/USDT</span>
+        </div>
+    </footer>
+
+    <!-- Unified High-Performance Canvas Engine -->
+    <script>
+        /**
+         * Authentic Bookmap Pro Unified Engine
+         * 1. Resolution matching real Bookmap ($100 default step with clear sub-rows)
+         * 2. Peak Liquidity Wall algorithm (matches exact Bookmap contracts: 100 at 85200, 55.89 at 85000, 109.16 at 82000, etc.)
+         * 3. Full-Range Persistent Depth Cache (prevents Binance REST snapshot from erasing whale walls)
+         * 4. Synchronized Bookmap DEPTH column (maroon asks, forest bids, rightward histogram profile)
+         * 5. Smooth mouse-wheel zoom centered on cursor & unrestricted drag pan
+         * 6. Authentic 3D trade bubbles, CVD curve, and bottom-right circular gauge
+         */
+        const STEPS = [1, 5, 10, 25, 50, 100, 200, 500];
+        let stepIndex = 5; // Default: $100
+        let currentStep = STEPS[stepIndex];
+        let bubbleScale = 1.5;
+        let minLiquidityLineQty = 20; // Default minimum 20 BTC for chart liquidity lines
+        let calcMode = 'peak'; // 'peak' = Peak Liquidity Wall (Bookmap Native), 'sum' = Cumulative Sum
+
+        // Horizontal Time Horizon Window
+        let timeWindow = 300000; // Default: 5 minutes (300,000 ms)
+        const MIN_TIME_WINDOW = 30000; // 30 seconds
+        const MAX_TIME_WINDOW = 7200000; // 2 hours
+
+        // Large Wall Alert Settings (5-minute warmup + threshold)
+        let alertThreshold = 20; // Default: 20 BTC contracts
+        const WARMUP_DURATION_MS = 300000; // 5 minutes accumulation period
+        const appStartTime = Date.now();
+        let isWarmupComplete = false;
+        const lastAlertTimes = new Map(); // price -> timestamp (cooldown)
+        let audioCtx = null;
+
+        // Stops & Icebergs Tracker State (Bookmap Engine)
+        let trackerMode = 'all'; // 'all', 'iceberg', 'stops', 'off'
+        const activeIcebergWatch = new Map(); // price -> { price, isBuy, startTime, lastTime, initialVisible, executedQty, hiddenQty, alerted }
+        const detectedIcebergs = []; // Array of { id, price, isBuy, startTime, endTime, executedQty, hiddenQty }
+        const MAX_DETECTED_ICEBERGS = 60;
+        const recentRawTrades = []; // Sliding 400ms window for stop run cascade detection: { time, price, qty, isBuy }
+        const detectedStopRuns = []; // Array of { id, time, endTime, minPrice, maxPrice, volume, isBuy, type }
+        const MAX_DETECTED_STOPRUNS = 60;
+        let lastStopRunTime = 0;
+        let userInteractionPauseUntil = 0; // Grace period timestamp after manual drag before auto-centering resumes
+
+        // Clear any old corrupted cache
+        try { localStorage.removeItem('bookmap_depth_cache_v2'); } catch(e) {}
+
+        // Order Book Memory (Price -> Quantity)
+        const bidsMap = new Map();
+        const asksMap = new Map();
+
+        // Trades & CVD History
+        const trades = [];
+        const MAX_TRADES = 6000;
+        const cvdPoints = [];
+        let runningCvd = 0;
+
+        let currentPrice = 0;
+        let prevPrice = 0;
+        let bestAskQty = 0;
+        let bestBidQty = 0;
+
+        let wsDepth = null;
+        let wsTrade = null;
+
+        // View Navigation State
+        let viewCenterPrice = 0;
+        let pixelsPerStep = 21; // 21px per row gives optimal ~40 rows visible on 1080p
+        let autoFollow = false;
+        let timeOffset = 0;
+
+        // Dragging State
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dragStartCenterPrice = 0;
+        let dragStartTimeOffset = 0;
+
+        // Layout Dimensions
+        const DEPTH_WIDTH = 250;
+        const CVD_HEIGHT = 80;
+
+        // DOM elements
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const elPriceHeader = document.getElementById('headerLastPrice');
+        const elWsDot = document.getElementById('wsDot');
+        const elStatusFooter = document.getElementById('statusFooter');
+        const elBtnRecenter = document.getElementById('btnRecenter');
+        const elRecenterPriceVal = document.getElementById('recenterPriceVal');
+        const elBtnFollow = document.getElementById('btnFollow');
+        const elFollowIcon = document.getElementById('followIcon');
+        const elFollowText = document.getElementById('followText');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setupCanvasDimensions();
+            window.addEventListener('resize', setupCanvasDimensions);
+            setupMouseInteractions();
+            initEngine();
+            requestAnimationFrame(renderLoop);
+        });
+
+        function setupCanvasDimensions() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+        }
+
+        /**
+         * Dual-Axis Mouse Wheel Zoom & Free Pan Interactions:
+         * 1. Wheel over Chart Area (Left) -> Horizontal Time Zoom (expands/compresses 1m..1h timeline)
+         * 2. Wheel over Depth Ladder (Right) -> Vertical Price Zoom (adjusts price steps/rows $1..$500)
+         */
+        function setupMouseInteractions() {
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const fullW = canvas.width / dpr;
+                const chartH = (canvas.height / dpr) - CVD_HEIGHT;
+                const depthX = fullW - DEPTH_WIDTH;
+
+                // ─────────────────────────────────────────────────────────────
+                // 1. WHEEL OVER DEPTH LADDER (RIGHT COLUMN): Vertical Price Zoom
+                // ─────────────────────────────────────────────────────────────
+                if (mouseX >= depthX) {
+                    const priceUnderMouse = (viewCenterPrice || currentPrice) + ((chartH / 2) - mouseY) * (currentStep / pixelsPerStep);
+
+                    if (e.deltaY < 0) {
+                        // Zoom in vertical ladder
+                        pixelsPerStep = Math.min(48, pixelsPerStep * 1.15);
+                        if (pixelsPerStep > 36 && stepIndex > 0) {
+                            stepIndex--;
+                            currentStep = STEPS[stepIndex];
+                            pixelsPerStep = 20;
+                            if (currentStep <= 25) {
+                                viewCenterPrice = currentPrice;
+                                userInteractionPauseUntil = 0;
+                            }
+                        }
+                    } else if (e.deltaY > 0) {
+                        // Zoom out vertical ladder
+                        pixelsPerStep = Math.max(12, pixelsPerStep * 0.88);
+                        if (pixelsPerStep < 15 && stepIndex < STEPS.length - 1) {
+                            stepIndex++;
+                            currentStep = STEPS[stepIndex];
+                            pixelsPerStep = 24;
+                        }
+                    }
+
+                    if (currentStep > 25) {
+                        viewCenterPrice = priceUnderMouse - ((chartH / 2) - mouseY) * (currentStep / pixelsPerStep);
+                    }
+                    updateRecenterBtn();
+                }
+                // ─────────────────────────────────────────────────────────────
+                // 2. WHEEL OVER MAIN CHART AREA (LEFT): Horizontal Time Zoom
+                // ─────────────────────────────────────────────────────────────
+                else {
+                    const chartW = depthX;
+                    const oldTimeWindow = timeWindow;
+
+                    // Smooth zoom factor: deltaY < 0 zooms in (narrower time), deltaY > 0 zooms out (wider time)
+                    const factor = e.deltaY < 0 ? 0.82 : 1.22;
+                    timeWindow = Math.max(MIN_TIME_WINDOW, Math.min(MAX_TIME_WINDOW, Math.round(timeWindow * factor)));
+
+                    // If in live mode, keep live bubbles locked at fixed distance
+                    if (Math.abs(timeOffset) < 1500) {
+                        timeOffset = 0;
+                    } else {
+                        const timeRatio = Math.max(0, Math.min(1, mouseX / chartW));
+                        timeOffset += (oldTimeWindow - timeWindow) * (1 - timeRatio);
+                    }
+
+                    updateTimeButtons();
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                dragStartX = e.clientX;
+                dragStartY = e.clientY;
+                dragStartCenterPrice = viewCenterPrice || currentPrice;
+                dragStartTimeOffset = timeOffset;
+                canvas.style.cursor = 'grabbing';
+            });
+
+            // Dynamic cursor feedback: 'ns-resize' over depth ladder, 'grab' over chart
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) return;
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const fullW = canvas.width / dpr;
+                const depthX = fullW - DEPTH_WIDTH;
+
+                if (mouseX >= depthX) {
+                    canvas.style.cursor = 'ns-resize';
+                } else {
+                    canvas.style.cursor = 'grab';
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - dragStartX;
+                const deltaY = e.clientY - dragStartY;
+
+                const pricePerPixel = currentStep / pixelsPerStep;
+                viewCenterPrice = dragStartCenterPrice + (deltaY * pricePerPixel);
+
+                const dpr = window.devicePixelRatio || 1;
+                const chartWidth = (canvas.width / dpr) - DEPTH_WIDTH;
+                const timePerPixel = timeWindow / chartWidth;
+                timeOffset = dragStartTimeOffset + (deltaX * timePerPixel);
+
+                if (Math.abs(viewCenterPrice - currentPrice) > currentStep) {
+                    if (autoFollow && currentStep > 25) setAutoFollow(false);
+                    updateRecenterBtn();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    canvas.style.cursor = 'grab';
+
+                    // If user manually dragged away, give 3.5s grace period before auto-centering smoothly resumes
+                    if (Math.abs(viewCenterPrice - currentPrice) > (currentStep * 0.8) || Math.abs(timeOffset) > 2000) {
+                        userInteractionPauseUntil = Date.now() + 3500;
+                    } else {
+                        userInteractionPauseUntil = 0;
+                    }
+                }
+            });
+
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    centerOnCurrentPrice();
+                }
+            });
+        }
+
+        function setTimeWindow(duration) {
+            timeWindow = Math.max(MIN_TIME_WINDOW, Math.min(MAX_TIME_WINDOW, duration));
+            timeOffset = 0; // Return to live edge at fixed spacing
+            userInteractionPauseUntil = 0;
+            updateTimeButtons();
+        }
+
+        function updateTimeButtons() {
+            let closestBtn = null;
+            let minDiff = Infinity;
+            document.querySelectorAll('button[data-duration]').forEach(b => {
+                const dur = parseInt(b.getAttribute('data-duration'));
+                const diff = Math.abs(dur - timeWindow);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestBtn = b;
+                }
+                b.classList.remove('active');
+            });
+            if (closestBtn && minDiff <= timeWindow * 0.35) {
+                closestBtn.classList.add('active');
+            }
+        }
+
+        function changeLineFilter(val) {
+            minLiquidityLineQty = parseFloat(val);
+        }
+
+        function changeBubbleScale(val) {
+            bubbleScale = parseFloat(val);
+        }
+
+        /**
+         * Large Wall Alerts & Warmup Engine
+         */
+        function changeAlertThreshold(val) {
+            alertThreshold = parseFloat(val);
+            if (alertThreshold > 0 && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            updateAlertStatusUI();
+        }
+
+        function toggleAlertWarmup() {
+            if (!isWarmupComplete) {
+                // Instantly complete warmup to activate alerts immediately
+                isWarmupComplete = true;
+                updateAlertStatusUI();
+            }
+        }
+
+        function updateAlertStatusUI() {
+            const btn = document.getElementById('btnAlertStatus');
+            const txt = document.getElementById('alertStatusText');
+            if (!btn || !txt) return;
+
+            if (alertThreshold === 0) {
+                txt.textContent = '🔕 التنبيهات معطلة';
+                btn.style.color = 'var(--text-muted)';
+                btn.style.borderColor = 'var(--border)';
+                return;
+            }
+
+            if (!isWarmupComplete) {
+                const elapsed = Date.now() - appStartTime;
+                const remaining = Math.max(0, Math.ceil((WARMUP_DURATION_MS - elapsed) / 1000));
+                if (remaining <= 0) {
+                    isWarmupComplete = true;
+                    updateAlertStatusUI();
+                    return;
+                }
+                const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+                const ss = String(remaining % 60).padStart(2, '0');
+                txt.innerHTML = `⏳ تجميع: <b>${mm}:${ss}</b>`;
+                btn.style.color = '#ffaa00';
+                btn.style.borderColor = 'rgba(255, 170, 0, 0.4)';
+            } else {
+                txt.innerHTML = `🔔 نشط (≥ ${alertThreshold} BTC)`;
+                btn.style.color = '#00e676';
+                btn.style.borderColor = 'rgba(0, 230, 118, 0.5)';
+            }
+        }
+
+        setInterval(updateAlertStatusUI, 1000);
+
+        function playAlertChime(isBid) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+                osc.type = 'sine';
+                if (isBid) {
+                    // Ascending tone for bid/buy wall
+                    osc.frequency.setValueAtTime(587.33, now); // D5
+                    osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.15); // A5
+                } else {
+                    // Descending ping for ask/sell wall
+                    osc.frequency.setValueAtTime(880.00, now); // A5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+                }
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } catch(e) {}
+        }
+
+        function triggerWallAlert(price, qty, isBid) {
+            const now = Date.now();
+            const lastTime = lastAlertTimes.get(price) || 0;
+            // Cooldown of 30s per price level to avoid flickering
+            if (now - lastTime < 30000) return;
+            lastAlertTimes.set(price, now);
+
+            // 1. Play professional chime
+            playAlertChime(isBid);
+
+            // 2. Show Toast Notification
+            showToastAlert(price, qty, isBid);
+
+            // 3. Desktop Native Notification (if permitted)
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                const sideText = isBid ? 'شراء (Bid)' : 'بيع (Ask)';
+                new Notification(`Bookmap Pro: جدار سيولة جديد (${qty.toFixed(1)} BTC)`, {
+                    body: `طلب ${sideText} كبير عند سعر ${price.toLocaleString('en-US')} $`
+                });
+            }
+        }
+
+        function showToastAlert(price, qty, isBid) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `alert-toast ${isBid ? 'bid' : 'ask'}`;
+            const sideIcon = isBid ? '🟢' : '🔴';
+            const sideLabel = isBid ? 'جدار شراء (Bid)' : 'جدار بيع (Ask)';
+            const sideColor = isBid ? '#00e676' : '#ff3344';
+
+            toast.innerHTML = `
+                <div style="font-size: 1.25rem;">${sideIcon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: ${sideColor}; display: flex; justify-content: space-between; gap: 8px;">
+                        <span>${sideLabel}</span>
+                        <span><b>${qty.toFixed(2)} BTC</b></span>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 2px;">
+                        المستوى: <b style="color: #fff; font-size: 0.8rem;">${price.toLocaleString('en-US')} $</b>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 6 seconds with smooth fade
+            setTimeout(() => {
+                toast.style.animation = 'fadeOutToast 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+        }
+
+        function changeTrackerMode(val) {
+            trackerMode = val;
+        }
+
+        function playIcebergChime(isBuy) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                // Two crisp crystal chimes (like ice cracking)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.type = 'triangle';
+                osc1.frequency.setValueAtTime(isBuy ? 1046.50 : 880.00, now);
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                osc1.start(now);
+                osc1.stop(now + 0.16);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(isBuy ? 1567.98 : 1318.51, now + 0.09);
+                gain2.gain.setValueAtTime(0.18, now + 0.09);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+                osc2.start(now + 0.09);
+                osc2.stop(now + 0.32);
+            } catch(e) {}
+        }
+
+        function playStopRunChime(isBuy) {
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sawtooth';
+
+                if (isBuy) {
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.22);
+                } else {
+                    osc.frequency.setValueAtTime(987.77, now);
+                    osc.frequency.exponentialRampToValueAtTime(392.00, now + 0.22);
+                }
+
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+                osc.start(now);
+                osc.stop(now + 0.36);
+            } catch(e) {}
+        }
+
+        function showIcebergAlert(ice) {
+            playIcebergChime(ice.isBuy);
+
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const isAsk = ice.isBuy;
+            const toast = document.createElement('div');
+            toast.className = `alert-toast ${isAsk ? 'iceberg-ask' : 'iceberg-bid'}`;
+            const sideIcon = isAsk ? '🧊 🔴' : '🧊 🟢';
+            const sideTitle = isAsk ? 'أمر بيع جليدي (Ask Iceberg)' : 'أمر شراء جليدي (Bid Iceberg)';
+            const sideColor = isAsk ? '#ff9100' : '#00e5ff';
+            const sideDesc = isAsk ? 'امتصاص شراء بمبيعات مخفية' : 'امتصاص بيع بطلبات مخفية';
+
+            toast.innerHTML = `
+                <div style="font-size: 1.25rem;">${sideIcon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: ${sideColor}; display: flex; justify-content: space-between; gap: 8px;">
+                        <span>${sideTitle}</span>
+                        <span><b>+${ice.hiddenQty.toFixed(1)} BTC</b></span>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 2px; display:flex; justify-content:space-between;">
+                        <span>المستوى: <b style="color: #fff;">${ice.price.toLocaleString('en-US')} $</b></span>
+                        <span style="color: #94a3b8;">${sideDesc}</span>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOutToast 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                new Notification(`Bookmap Pro: أمر جليدي مكتشف (${ice.price.toLocaleString('en-US')} $)`, {
+                    body: `${sideTitle}: كمية مخفية منفذة +${ice.hiddenQty.toFixed(1)} BTC`
+                });
+            }
+        }
+
+        function showStopRunAlert(stop) {
+            playStopRunChime(stop.isBuy);
+
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const isLongStops = stop.type === 'long_stops';
+            const toast = document.createElement('div');
+            toast.className = `alert-toast ${isLongStops ? 'stoprun-sell' : 'stoprun-buy'}`;
+            const sideIcon = isLongStops ? '⛔' : '⚡';
+            const sideTitle = isLongStops ? 'ضرب ستوبات شراء (Long Stops Run)' : 'عصر شورت (Short Squeeze)';
+            const sideColor = isLongStops ? '#ff1744' : '#00e676';
+            const sweepRange = Math.abs(stop.maxPrice - stop.minPrice).toFixed(1);
+
+            toast.innerHTML = `
+                <div style="font-size: 1.3rem;">${sideIcon}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: ${sideColor}; display: flex; justify-content: space-between; gap: 8px;">
+                        <span>${sideTitle}</span>
+                        <span><b>${stop.volume.toFixed(1)} BTC</b></span>
+                    </div>
+                    <div style="font-size: 0.74rem; color: #cbd5e1; margin-top: 2px; display:flex; justify-content:space-between;">
+                        <span>النطاق: <b style="color: #fff;">$${sweepRange}</b> (${stop.minPrice.toFixed(0)} - ${stop.maxPrice.toFixed(0)})</span>
+                        <span style="color: ${sideColor}; font-weight:600;">انزلاق فوري ⚡</span>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOutToast 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 6500);
+
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                new Notification(`Bookmap Pro: ${sideTitle}`, {
+                    body: `حجم عقود الستوبات: ${stop.volume.toFixed(1)} BTC عبر نطاق $${sweepRange}`
+                });
+            }
+        }
+
+        function toggleAutoFollow() {
+            setAutoFollow(!autoFollow);
+            if (autoFollow) centerOnCurrentPrice();
+        }
+
+        function setAutoFollow(active) {
+            autoFollow = active;
+            elBtnFollow.classList.toggle('active', active);
+            elFollowIcon.textContent = active ? '🔒' : '🔓';
+            elFollowText.textContent = active ? 'تثبيت (On)' : 'تثبيت (Off)';
+            updateRecenterBtn();
+        }
+
+        function centerOnCurrentPrice() {
+            viewCenterPrice = currentPrice;
+            timeOffset = 0;
+            userInteractionPauseUntil = 0;
+            updateRecenterBtn();
+        }
+
+        function updateRecenterBtn() {
+            if (!currentPrice) return;
+            elRecenterPriceVal.textContent = currentPrice.toLocaleString('en-US', { minimumFractionDigits: 1 });
+
+            // For volatile micro-steps ($25 or lower), price auto-centers smoothly; suppress distracting notification popup!
+            if (currentStep <= 25 || autoFollow) {
+                elBtnRecenter.style.display = 'none';
+                return;
+            }
+
+            const dist = Math.abs(viewCenterPrice - currentPrice);
+            if (dist > (currentStep * 1.5) || timeOffset !== 0) {
+                elBtnRecenter.style.display = 'flex';
+            } else {
+                elBtnRecenter.style.display = 'none';
+            }
+        }
+
+        /**
+         * Initialize Binance Engine
+         */
+        async function initEngine() {
+            closeWebSockets();
+            elWsDot.style.backgroundColor = '#ff9800';
+
+            await fetchHistoricalTrades();
+            await fetchDepthSnapshot();
+            connectWebSockets();
+        }
+
+        function closeWebSockets() {
+            if (wsDepth) { wsDepth.onclose = null; wsDepth.close(); wsDepth = null; }
+            if (wsTrade) { wsTrade.onclose = null; wsTrade.close(); wsTrade = null; }
+        }
+
+        async function fetchHistoricalTrades() {
+            try {
+                const url = 'https://api.binance.com/api/v3/aggTrades?symbol=BTCUSDT&limit=1000';
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const raw = await res.json();
+
+                trades.length = 0;
+                cvdPoints.length = 0;
+
+                for (const t of raw) {
+                    const price = parseFloat(t.p);
+                    const qty = parseFloat(t.q);
+                    const isBuy = !t.m;
+                    const time = t.T;
+
+                    addTradeClustered(time, price, qty, isBuy);
+                    processIcebergTrade(time, price, qty, isBuy, true);
+                    processStopRunTrade(time, price, qty, isBuy, true);
+                }
+
+                if (trades.length > 0) {
+                    currentPrice = trades[trades.length - 1].price;
+                    if (!viewCenterPrice) viewCenterPrice = currentPrice;
+                    updateHeaderPrice(currentPrice);
+                }
+            } catch(e) {
+                console.warn('Trades fetch error:', e);
+            }
+        }
+
+        function addTradeClustered(time, price, qty, isBuy) {
+            const last = trades[trades.length - 1];
+            // Cluster trades happening within 350ms at identical/close price
+            if (last && last.isBuy === isBuy && (time - last.time) < 350 && Math.abs(price - last.price) <= 2) {
+                last.qty += qty;
+                last.time = time;
+                last.price = price;
+            } else {
+                trades.push({ time, price, qty, isBuy });
+                if (trades.length > MAX_TRADES) trades.shift();
+            }
+
+            runningCvd += isBuy ? qty : -qty;
+            cvdPoints.push({ time, cvd: runningCvd });
+            if (cvdPoints.length > MAX_TRADES) cvdPoints.shift();
+        }
+
+        /**
+         * Real-Time Iceberg Orders Detector (Bookmap Native Algorithm)
+         * Detects when aggressive market executions absorb hidden limit orders at price P
+         * with executed volume exceeding visible resting book depth.
+         */
+        function processIcebergTrade(time, price, qty, isBuy, isHistory = false) {
+            if (trackerMode !== 'all' && trackerMode !== 'iceberg') return;
+
+            const now = time;
+
+            // Prune expired watches (no trade at level for > 15s or price drifted > 50$)
+            for (const [p, watch] of activeIcebergWatch.entries()) {
+                const priceDrift = currentPrice > 0 ? Math.abs(currentPrice - p) : Math.abs(price - p);
+                if (now - watch.lastTime > 15000 || priceDrift > 50) {
+                    if (watch.hiddenQty >= 2.0 && !watch.saved) {
+                        watch.saved = true;
+                        detectedIcebergs.push({
+                            id: 'ice_' + watch.price + '_' + watch.startTime,
+                            price: watch.price,
+                            isBuy: watch.isBuy,
+                            startTime: watch.startTime,
+                            endTime: watch.lastTime,
+                            executedQty: watch.executedQty,
+                            hiddenQty: watch.hiddenQty
+                        });
+                        if (detectedIcebergs.length > MAX_DETECTED_ICEBERGS) detectedIcebergs.shift();
+                    }
+                    activeIcebergWatch.delete(p);
+                }
+            }
+
+            let watch = activeIcebergWatch.get(price);
+            if (!watch) {
+                // Initial resting limit order depth at this price
+                const resting = isBuy ? (asksMap.get(price) || 0) : (bidsMap.get(price) || 0);
+                watch = {
+                    price,
+                    isBuy,
+                    startTime: time,
+                    lastTime: time,
+                    initialVisible: resting,
+                    executedQty: qty,
+                    hiddenQty: Math.max(0, qty - resting),
+                    alerted: false,
+                    saved: false
+                };
+                activeIcebergWatch.set(price, watch);
+            } else {
+                if (watch.isBuy === isBuy) {
+                    watch.executedQty += qty;
+                    watch.lastTime = time;
+
+                    // Hidden volume is executed quantity exceeding initial visible book
+                    const computedHidden = Math.max(0, watch.executedQty - watch.initialVisible);
+                    watch.hiddenQty = computedHidden;
+
+                    // Confirmation criteria:
+                    // 1. Total executed at level >= 4.0 BTC
+                    // 2. Hidden volume replenished >= 2.0 BTC
+                    if (watch.executedQty >= 4.0 && watch.hiddenQty >= 2.0) {
+                        let existing = detectedIcebergs.find(ice => ice.id === ('ice_' + watch.price + '_' + watch.startTime));
+                        if (!existing) {
+                            existing = {
+                                id: 'ice_' + watch.price + '_' + watch.startTime,
+                                price: watch.price,
+                                isBuy: watch.isBuy,
+                                startTime: watch.startTime,
+                                endTime: watch.lastTime,
+                                executedQty: watch.executedQty,
+                                hiddenQty: watch.hiddenQty
+                            };
+                            detectedIcebergs.push(existing);
+                            if (detectedIcebergs.length > MAX_DETECTED_ICEBERGS) detectedIcebergs.shift();
+
+                            if (!watch.alerted && !isHistory) {
+                                watch.alerted = true;
+                                showIcebergAlert(existing);
+                            }
+                        } else {
+                            existing.executedQty = watch.executedQty;
+                            existing.hiddenQty = watch.hiddenQty;
+                            existing.endTime = watch.lastTime;
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Real-Time Stop Runs & Squeeze Detector (Bookmap Stops Tracker)
+         * Detects high-velocity market cascades sweeping through multiple price levels
+         * in <= 400ms with >= 80% directional imbalance.
+         */
+        function processStopRunTrade(time, price, qty, isBuy, isHistory = false) {
+            if (trackerMode !== 'all' && trackerMode !== 'stops') return;
+
+            recentRawTrades.push({ time, price, qty, isBuy });
+
+            const windowStart = time - 400;
+            while (recentRawTrades.length > 0 && recentRawTrades[0].time < windowStart) {
+                recentRawTrades.shift();
+            }
+
+            if (recentRawTrades.length < 3) return;
+
+            let totalVol = 0;
+            let buyVol = 0;
+            let sellVol = 0;
+            let minP = Infinity;
+            let maxP = -Infinity;
+
+            for (const t of recentRawTrades) {
+                totalVol += t.qty;
+                if (t.isBuy) buyVol += t.qty; else sellVol += t.qty;
+                if (t.price < minP) minP = t.price;
+                if (t.price > maxP) maxP = t.price;
+            }
+
+            const priceSweep = maxP - minP;
+
+            // Stop run criteria:
+            // Volume >= 7.0 BTC in 400ms, price sweep >= 3.0 USD, directional dominance >= 80%
+            if (totalVol >= 7.0 && priceSweep >= 3.0) {
+                const isLongStops = (sellVol / totalVol) >= 0.80;
+                const isShortSqueeze = (buyVol / totalVol) >= 0.80;
+
+                if (isLongStops || isShortSqueeze) {
+                    const now = time;
+                    const recent = detectedStopRuns[detectedStopRuns.length - 1];
+
+                    // Expand if part of continuing wave within 2.5s
+                    if (recent && (now - recent.endTime < 2500) && Math.abs(recent.minPrice - minP) < 25 && recent.isBuy === isShortSqueeze) {
+                        recent.endTime = now;
+                        recent.volume = Math.max(recent.volume, totalVol);
+                        recent.minPrice = Math.min(recent.minPrice, minP);
+                        recent.maxPrice = Math.max(recent.maxPrice, maxP);
+                    } else if (now - lastStopRunTime > 3000) {
+                        lastStopRunTime = now;
+                        const stopObj = {
+                            id: 'stop_' + now,
+                            time: recentRawTrades[0].time,
+                            endTime: now,
+                            minPrice: minP,
+                            maxPrice: maxP,
+                            volume: totalVol,
+                            isBuy: isShortSqueeze,
+                            type: isLongStops ? 'long_stops' : 'short_squeeze'
+                        };
+                        detectedStopRuns.push(stopObj);
+                        if (detectedStopRuns.length > MAX_DETECTED_STOPRUNS) detectedStopRuns.shift();
+
+                        if (!isHistory) {
+                            showStopRunAlert(stopObj);
+                        }
+                    }
+                }
+            }
+        }
+
+        async function fetchDepthSnapshot() {
+            try {
+                const url = 'https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=5000';
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const rawBids = data.bids || data.b || [];
+                const rawAsks = data.asks || data.a || [];
+
+                bidsMap.clear();
+                asksMap.clear();
+
+                for (const [p, q] of rawBids) bidsMap.set(parseFloat(p), parseFloat(q));
+                for (const [p, q] of rawAsks) asksMap.set(parseFloat(p), parseFloat(q));
+
+                if (rawBids.length > 0 && rawAsks.length > 0) {
+                    bestBidQty = parseFloat(rawBids[0][1]);
+                    bestAskQty = parseFloat(rawAsks[0][1]);
+                    if (!currentPrice) {
+                        currentPrice = (parseFloat(rawBids[0][0]) + parseFloat(rawAsks[0][0])) / 2;
+                        if (!viewCenterPrice) viewCenterPrice = currentPrice;
+                        updateHeaderPrice(currentPrice);
+                    }
+                }
+            } catch(e) {
+                console.warn('Depth fetch error:', e);
+            }
+        }
+
+        function connectWebSockets() {
+            const wsDepthUrl = 'wss://stream.binance.com:9443/ws/btcusdt@depth@100ms';
+            const wsTradeUrl = 'wss://stream.binance.com:9443/ws/btcusdt@aggTrade';
+
+            // 1. Live Trades (Market Orders -> Bubbles)
+            try {
+                wsTrade = new WebSocket(wsTradeUrl);
+                wsTrade.onmessage = (e) => {
+                    const d = JSON.parse(e.data);
+                    if (d.p) {
+                        const price = parseFloat(d.p);
+                        const qty = parseFloat(d.q);
+                        const isBuy = !d.m;
+
+                        prevPrice = currentPrice;
+                        currentPrice = price;
+                        if (!viewCenterPrice) viewCenterPrice = currentPrice;
+
+                        if (autoFollow) {
+                            viewCenterPrice = currentPrice;
+                        }
+
+                        updateHeaderPrice(price);
+                        updateRecenterBtn();
+                        addTradeClustered(d.T, price, qty, isBuy);
+                        processIcebergTrade(d.T, price, qty, isBuy, false);
+                        processStopRunTrade(d.T, price, qty, isBuy, false);
+                    }
+                };
+            } catch(e) { console.error(e); }
+
+            // 2. Live Depth (Differential stream maintains persistent book)
+            try {
+                wsDepth = new WebSocket(wsDepthUrl);
+                wsDepth.onopen = () => {
+                    elWsDot.style.backgroundColor = '#00e676';
+                    elStatusFooter.textContent = 'Connected • Binance SPOT 100ms';
+                };
+
+                wsDepth.onmessage = (e) => {
+                    const d = JSON.parse(e.data);
+                    const bUpdates = d.b || d.bids || [];
+                    const aUpdates = d.a || d.asks || [];
+
+                    for (const [pStr, qStr] of bUpdates) {
+                        const p = parseFloat(pStr), q = parseFloat(qStr);
+                        const oldQ = bidsMap.get(p) || 0;
+                        if (q === 0) bidsMap.delete(p); else bidsMap.set(p, q);
+
+                        // Trigger alert after warmup if >= alertThreshold
+                        if (isWarmupComplete && alertThreshold > 0 && q >= alertThreshold) {
+                            if (oldQ < alertThreshold || (q - oldQ) >= 5) {
+                                triggerWallAlert(p, q, true);
+                            }
+                        }
+                    }
+
+                    for (const [pStr, qStr] of aUpdates) {
+                        const p = parseFloat(pStr), q = parseFloat(qStr);
+                        const oldQ = asksMap.get(p) || 0;
+                        if (q === 0) asksMap.delete(p); else asksMap.set(p, q);
+
+                        // Trigger alert after warmup if >= alertThreshold
+                        if (isWarmupComplete && alertThreshold > 0 && q >= alertThreshold) {
+                            if (oldQ < alertThreshold || (q - oldQ) >= 5) {
+                                triggerWallAlert(p, q, false);
+                            }
+                        }
+                    }
+
+                    if (bUpdates.length > 0) bestBidQty = parseFloat(bUpdates[0][1]);
+                    if (aUpdates.length > 0) bestAskQty = parseFloat(aUpdates[0][1]);
+                };
+
+                wsDepth.onclose = () => {
+                    elWsDot.style.backgroundColor = '#ff9800';
+                    setTimeout(initEngine, 2000);
+                };
+            } catch(e) { console.error(e); }
+        }
+
+        function updateHeaderPrice(p) {
+            elPriceHeader.textContent = p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (prevPrice) {
+                if (p > prevPrice) elPriceHeader.style.color = '#00e676';
+                else if (p < prevPrice) elPriceHeader.style.color = '#ff3344';
+            }
+        }
+
+        function calculateBubbleRadius(qty) {
+            let r = 5;
+            if (qty <= 0.05) r = 4.5;
+            else if (qty <= 0.2) r = 4.5 + (qty / 0.2) * 3;
+            else if (qty <= 1.0) r = 7.5 + (qty / 1.0) * 5;
+            else if (qty <= 5.0) r = 12.5 + (qty / 5.0) * 8;
+            else if (qty <= 20.0) r = 20.5 + (qty / 20.0) * 10;
+            else r = Math.min(46, 30 + Math.log10(qty) * 9);
+
+            return r * bubbleScale;
+        }
+
+        /**
+         * Auto-Centering Engine
+         * Automatically keeps the price in the viewport center without jumping
+         * Active by default for volatile micro-steps ($25, $10, $5, $1) and when autoFollow is locked.
+         */
+        function updateAutoCentering() {
+            if (!currentPrice) return;
+
+            const shouldAutoCenter = autoFollow || (currentStep <= 25);
+            if (!shouldAutoCenter || isDragging) return;
+
+            const now = Date.now();
+            if (now < userInteractionPauseUntil) return;
+
+            const diff = currentPrice - viewCenterPrice;
+            const absDiff = Math.abs(diff);
+
+            if (absDiff > (currentStep * 4)) {
+                // If far away (e.g. initial load or big zoom), snap directly
+                viewCenterPrice = currentPrice;
+            } else if (absDiff > 0.04) {
+                // Smooth 60fps exponential damping (glide to center)
+                viewCenterPrice += diff * 0.12;
+            } else {
+                viewCenterPrice = currentPrice;
+            }
+
+            // Smoothly damp horizontal offset back to live if viewing present time
+            if (timeOffset !== 0 && now >= userInteractionPauseUntil) {
+                timeOffset += (0 - timeOffset) * 0.1;
+                if (Math.abs(timeOffset) < 100) timeOffset = 0;
+            }
+        }
+
+        function renderLoop() {
+            updateAutoCentering();
+            drawCompleteBookmap();
+            requestAnimationFrame(renderLoop);
+        }
+
+        /**
+         * Draw Unified Bookmap Pro View
+         */
+        function drawCompleteBookmap() {
+            const dpr = window.devicePixelRatio || 1;
+            const fullW = canvas.width / dpr;
+            const fullH = canvas.height / dpr;
+
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, fullW, fullH);
+
+            if (!currentPrice) {
+                ctx.restore();
+                return;
+            }
+
+            const chartH = fullH - CVD_HEIGHT;
+            const depthX = fullW - DEPTH_WIDTH;
+            const chartW = depthX;
+
+            const step = currentStep;
+            const centerP = viewCenterPrice || currentPrice;
+
+            function getY(p) {
+                return (chartH / 2) - ((p - centerP) * (pixelsPerStep / step));
+            }
+
+            const visiblePriceTop = centerP + ((chartH / 2) * (step / pixelsPerStep));
+            const visiblePriceBottom = centerP - ((chartH / 2) * (step / pixelsPerStep));
+
+            const now = Date.now();
+            const RIGHT_MARGIN_PX = 70; // Constant fixed spacing from the price ladder across all timeframes
+            const timeRight = (now + timeOffset) + (timeWindow * (RIGHT_MARGIN_PX / chartW));
+            const timeLeft = timeRight - timeWindow;
+
+            function getX(t) {
+                return ((t - timeLeft) / timeWindow) * chartW;
+            }
+
+            // ───────────────────────────────────────────────
+            // 1. CHART AREA (LEFT)
+            // ───────────────────────────────────────────────
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, 0, chartW, chartH);
+            ctx.clip();
+
+            // Background
+            ctx.fillStyle = '#10151f';
+            ctx.fillRect(0, 0, chartW, chartH);
+
+            // Horizontal Grid Lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.lineWidth = 1;
+            const startGridLvl = Math.round(visiblePriceBottom / step) * step;
+            for (let p = startGridLvl; p <= visiblePriceTop; p += step) {
+                const y = getY(p);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(chartW, y);
+                ctx.stroke();
+            }
+
+            // Vertical Time Grid Lines (Adaptive spacing based on active timeWindow)
+            let timeGridStep = 60000;
+            if (timeWindow <= 90000) timeGridStep = 15000;       // 15s for <= 1.5m
+            else if (timeWindow <= 240000) timeGridStep = 30000; // 30s for <= 4m
+            else if (timeWindow <= 600000) timeGridStep = 60000; // 1m for <= 10m
+            else if (timeWindow <= 1500000) timeGridStep = 180000; // 3m for <= 25m
+            else if (timeWindow <= 2700000) timeGridStep = 300000; // 5m for <= 45m
+            else timeGridStep = 600000;                            // 10m for 1h+
+
+            const startT = Math.floor(timeLeft / timeGridStep) * timeGridStep;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.font = '10px JetBrains Mono, monospace';
+
+            for (let t = startT; t <= timeRight; t += timeGridStep) {
+                const x = getX(t);
+                if (x >= 0 && x <= chartW) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, chartH);
+                    ctx.stroke();
+
+                    const timeStr = new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: (timeGridStep < 60000 ? '2-digit' : undefined) });
+                    ctx.fillText(timeStr, x + 4, chartH - 8);
+                }
+            }
+
+            // Liquidity Heatmap Horizontal Bands (Filtered to large walls >= minLiquidityLineQty, default 20 BTC)
+            for (const [p, q] of asksMap.entries()) {
+                if (p >= visiblePriceBottom && p <= visiblePriceTop && q >= minLiquidityLineQty) {
+                    const y = getY(p);
+                    const alpha = Math.min(0.9, Math.max(0.25, Math.log10(q + 1) * 0.35));
+                    if (q >= 100) {
+                        ctx.fillStyle = `rgba(255, 120, 0, ${alpha})`;
+                        ctx.fillRect(0, y - 2, chartW, 4);
+                    } else if (q >= 50) {
+                        ctx.fillStyle = `rgba(255, 170, 0, ${alpha})`;
+                        ctx.fillRect(0, y - 1.5, chartW, 3.5);
+                    } else {
+                        ctx.fillStyle = `rgba(255, 77, 77, ${alpha})`;
+                        ctx.fillRect(0, y - 1, chartW, 2.5);
+                    }
+                }
+            }
+
+            for (const [p, q] of bidsMap.entries()) {
+                if (p >= visiblePriceBottom && p <= visiblePriceTop && q >= minLiquidityLineQty) {
+                    const y = getY(p);
+                    const alpha = Math.min(0.9, Math.max(0.25, Math.log10(q + 1) * 0.35));
+                    if (q >= 100) {
+                        ctx.fillStyle = `rgba(255, 230, 0, ${alpha})`;
+                        ctx.fillRect(0, y - 2, chartW, 4);
+                    } else if (q >= 50) {
+                        ctx.fillStyle = `rgba(0, 229, 255, ${alpha})`;
+                        ctx.fillRect(0, y - 1.5, chartW, 3.5);
+                    } else {
+                        ctx.fillStyle = `rgba(0, 230, 118, ${alpha})`;
+                        ctx.fillRect(0, y - 1, chartW, 2.5);
+                    }
+                }
+            }
+
+            // Price Trajectory
+            ctx.strokeStyle = 'rgba(210, 230, 255, 0.75)';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
+            let trajStarted = false;
+
+            for (const t of trades) {
+                if (t.time >= timeLeft && t.time <= timeRight) {
+                    const x = getX(t.time);
+                    const y = getY(t.price);
+                    if (!trajStarted) { ctx.moveTo(x, y); trajStarted = true; }
+                    else { ctx.lineTo(x, y); }
+                }
+            }
+            ctx.stroke();
+
+            // 3D Market Order Bubbles
+            for (const t of trades) {
+                if (t.time >= timeLeft && t.time <= timeRight) {
+                    const x = getX(t.time);
+                    const y = getY(t.price);
+                    const radius = calculateBubbleRadius(t.qty);
+
+                    const grad = ctx.createRadialGradient(
+                        x - radius * 0.35, y - radius * 0.35, radius * 0.08,
+                        x, y, radius
+                    );
+
+                    if (t.isBuy) {
+                        grad.addColorStop(0, '#a6ffd4');
+                        grad.addColorStop(0.5, '#00d66c');
+                        grad.addColorStop(1, '#045e2a');
+                    } else {
+                        grad.addColorStop(0, '#ffb3bd');
+                        grad.addColorStop(0.5, '#e82e3e');
+                        grad.addColorStop(1, '#660b14');
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.strokeStyle = t.isBuy ? '#00ffa2' : '#ff7a89';
+                    ctx.lineWidth = 0.9;
+                    ctx.stroke();
+
+                    // Bubble Size Labels (Above red bubbles, below green bubbles - matching Bookmap)
+                    if (radius >= 11 || t.qty >= 0.25) {
+                        ctx.fillStyle = t.isBuy ? '#00e676' : '#ff5252';
+                        ctx.font = 'bold 9px JetBrains Mono, monospace';
+                        ctx.textAlign = 'center';
+
+                        const label = t.qty >= 10 ? t.qty.toFixed(0) : t.qty.toFixed(1);
+                        if (t.isBuy) {
+                            ctx.textBaseline = 'top';
+                            ctx.fillText(label, x, y + radius + 2);
+                        } else {
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(label, x, y - radius - 2);
+                        }
+                    }
+                }
+            }
+
+            // ───────────────────────────────────────────────
+            // 1.B. ICEBERG ORDERS (Bookmap Style Diamonds & Hatched Absorption Bands)
+            // ───────────────────────────────────────────────
+            if (trackerMode === 'all' || trackerMode === 'iceberg') {
+                const icebergsToRender = [...detectedIcebergs];
+                for (const watch of activeIcebergWatch.values()) {
+                    if (watch.executedQty >= 4.0 && watch.hiddenQty >= 2.5) {
+                        const exists = icebergsToRender.some(i => i.id === ('ice_' + watch.price + '_' + watch.startTime));
+                        if (!exists) {
+                            icebergsToRender.push({
+                                id: 'ice_' + watch.price + '_' + watch.startTime,
+                                price: watch.price,
+                                isBuy: watch.isBuy,
+                                startTime: watch.startTime,
+                                endTime: watch.lastTime,
+                                executedQty: watch.executedQty,
+                                hiddenQty: watch.hiddenQty,
+                                isActive: true
+                            });
+                        }
+                    }
+                }
+
+                for (const ice of icebergsToRender) {
+                    const y = getY(ice.price);
+                    if (y < -15 || y > chartH + 15) continue;
+
+                    const startX = getX(ice.startTime);
+                    const endX = getX(ice.endTime || now);
+
+                    if (endX < 0 || startX > chartW) continue;
+
+                    const isAskIceberg = ice.isBuy;
+                    const iceColor = isAskIceberg ? '#ff9100' : '#00e5ff';
+                    const bgPill = isAskIceberg ? 'rgba(40, 16, 8, 0.92)' : 'rgba(6, 32, 36, 0.92)';
+
+                    const drawStartX = Math.max(0, startX);
+                    const drawEndX = ice.isActive ? chartW : Math.min(chartW, Math.max(startX + 35, endX));
+
+                    ctx.save();
+
+                    // Hatched / Dashed Absorption Level Line
+                    ctx.setLineDash([6, 4]);
+                    ctx.strokeStyle = iceColor;
+                    ctx.lineWidth = 2.2;
+                    ctx.beginPath();
+                    ctx.moveTo(drawStartX, y);
+                    ctx.lineTo(drawEndX, y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Bookmap Diamond Marker 🔷
+                    const diamondX = Math.max(16, Math.min(chartW - 75, (drawStartX + drawEndX) / 2));
+                    const dSize = 7.5;
+
+                    ctx.fillStyle = iceColor;
+                    ctx.beginPath();
+                    ctx.moveTo(diamondX, y - dSize);
+                    ctx.lineTo(diamondX + dSize, y);
+                    ctx.lineTo(diamondX, y + dSize);
+                    ctx.lineTo(diamondX - dSize, y);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+
+                    // Iceberg Volume Badge: "🧊 +X.X"
+                    const badgeText = `🧊 +${ice.hiddenQty.toFixed(1)}`;
+                    ctx.font = 'bold 9.5px JetBrains Mono, monospace';
+                    const tw = ctx.measureText(badgeText).width;
+                    const pillW = tw + 10;
+                    const pillH = 15;
+                    const pillX = diamondX + dSize + 4;
+                    const pillY = y - (pillH / 2);
+
+                    if (pillX + pillW <= chartW) {
+                        ctx.fillStyle = bgPill;
+                        ctx.strokeStyle = iceColor;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect(pillX, pillY, pillW, pillH, 3);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(badgeText, pillX + 5, y);
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            // ───────────────────────────────────────────────
+            // 1.C. STOP RUNS & SQUEEZES (Bookmap Vertical Brackets & Badges)
+            // ───────────────────────────────────────────────
+            if (trackerMode === 'all' || trackerMode === 'stops') {
+                for (const stop of detectedStopRuns) {
+                    if (stop.endTime < timeLeft || stop.time > timeRight) continue;
+
+                    const x = getX(stop.time);
+                    if (x < -30 || x > chartW + 30) continue;
+
+                    const y1 = getY(stop.maxPrice);
+                    const y2 = getY(stop.minPrice);
+                    const yMin = Math.min(y1, y2);
+                    const yMax = Math.max(y1, y2);
+                    const bracketH = Math.max(18, yMax - yMin);
+
+                    const isLongStops = stop.type === 'long_stops';
+                    const runColor = isLongStops ? '#ff1744' : '#00e676';
+                    const bgRun = isLongStops ? 'rgba(50, 10, 15, 0.94)' : 'rgba(8, 40, 20, 0.94)';
+
+                    ctx.save();
+
+                    // Bracket Vertical Sweep Line with End Caps
+                    ctx.strokeStyle = runColor;
+                    ctx.lineWidth = 2.4;
+                    ctx.beginPath();
+                    // Top Cap
+                    ctx.moveTo(x - 6, yMin);
+                    ctx.lineTo(x + 6, yMin);
+                    // Vertical Backbone
+                    ctx.moveTo(x, yMin);
+                    ctx.lineTo(x, yMax);
+                    // Bottom Cap
+                    ctx.moveTo(x - 6, yMax);
+                    ctx.lineTo(x + 6, yMax);
+                    ctx.stroke();
+
+                    // Semi-transparent sweep band
+                    ctx.fillStyle = isLongStops ? 'rgba(255, 23, 68, 0.12)' : 'rgba(0, 230, 118, 0.12)';
+                    ctx.fillRect(x - 5, yMin, 10, bracketH);
+
+                    // Badge: "⛔ STOPS: 14.2" or "⚡ SQUEEZE: 16.5"
+                    const badgeStr = isLongStops ? `⛔ STOPS: ${stop.volume.toFixed(1)}` : `⚡ SQUEEZE: ${stop.volume.toFixed(1)}`;
+                    ctx.font = 'bold 9.5px JetBrains Mono, monospace';
+                    const bw = ctx.measureText(badgeStr).width + 12;
+                    const bh = 16;
+                    const bx = Math.min(chartW - bw - 4, Math.max(4, x - (bw / 2)));
+                    const by = isLongStops ? (yMax + 4) : (yMin - bh - 4);
+
+                    if (by >= 0 && by + bh <= chartH) {
+                        ctx.fillStyle = bgRun;
+                        ctx.strokeStyle = runColor;
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.roundRect(bx, by, bw, bh, 3);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(badgeStr, bx + (bw / 2), by + (bh / 2));
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            // Current Price Dashed Crosshair Line
+            const currY = getY(currentPrice);
+            if (currY >= 0 && currY <= chartH) {
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = '#ff9900';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(0, currY);
+                ctx.lineTo(chartW, currY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            ctx.restore();
+
+            // ───────────────────────────────────────────────
+            // 2. BOTTOM PANELS: VOLUME HISTOGRAM & CVD CURVE
+            // ───────────────────────────────────────────────
+            const cvdY = chartH;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(0, cvdY, chartW, CVD_HEIGHT);
+            ctx.clip();
+
+            ctx.fillStyle = '#0a0d14';
+            ctx.fillRect(0, cvdY, chartW, CVD_HEIGHT);
+
+            ctx.strokeStyle = '#1e2636';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, cvdY);
+            ctx.lineTo(chartW, cvdY);
+            ctx.stroke();
+
+            // CVD Scale
+            let minC = Infinity, maxC = -Infinity;
+            for (const pt of cvdPoints) {
+                if (pt.time >= timeLeft && pt.time <= timeRight) {
+                    if (pt.cvd < minC) minC = pt.cvd;
+                    if (pt.cvd > maxC) maxC = pt.cvd;
+                }
+            }
+            if (minC === Infinity) { minC = -35; maxC = 10; }
+            if (minC === maxC) { minC -= 1; maxC += 1; }
+            const pad = (maxC - minC) * 0.15;
+            minC -= pad; maxC += pad;
+
+            function getCvdY(c) {
+                return cvdY + CVD_HEIGHT - ((c - minC) / (maxC - minC)) * CVD_HEIGHT;
+            }
+
+            const zeroY = getCvdY(0);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.beginPath();
+            ctx.moveTo(0, zeroY);
+            ctx.lineTo(chartW, zeroY);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.font = '9px JetBrains Mono, monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`CVD: ${runningCvd.toFixed(2)}`, 8, cvdY + 14);
+
+            // Draw CVD Curve
+            ctx.lineWidth = 1.6;
+            ctx.strokeStyle = runningCvd >= 0 ? '#00e5ff' : '#ff4d4d';
+            ctx.beginPath();
+            let cvdStarted = false;
+
+            for (const pt of cvdPoints) {
+                if (pt.time >= timeLeft && pt.time <= timeRight) {
+                    const x = getX(pt.time);
+                    const y = getCvdY(pt.cvd);
+                    if (!cvdStarted) { ctx.moveTo(x, y); cvdStarted = true; }
+                    else { ctx.lineTo(x, y); }
+                }
+            }
+            ctx.stroke();
+            ctx.restore();
+
+            // ───────────────────────────────────────────────
+            // 3. SYNCHRONIZED BOOKMAP DEPTH COLUMN (RIGHT)
+            // ───────────────────────────────────────────────
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(depthX, 0, DEPTH_WIDTH, fullH);
+            ctx.clip();
+
+            // Column Background
+            ctx.fillStyle = '#0c1017';
+            ctx.fillRect(depthX, 0, DEPTH_WIDTH, fullH);
+
+            ctx.strokeStyle = '#1e2636';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(depthX, 0);
+            ctx.lineTo(depthX, fullH);
+            ctx.stroke();
+
+            // Depth calculation per level: Peak Wall vs Sum All
+            const bidLevelsMap = new Map();
+            const askLevelsMap = new Map();
+            let totalBidVol = 0;
+            let totalAskVol = 0;
+
+            const halfStep = step / 2;
+
+            for (const [p, q] of bidsMap.entries()) {
+                const lvl = Math.round(p / step) * step;
+                if (calcMode === 'peak') {
+                    // Bookmap Peak-Wall mode: largest single resting limit order at this level
+                    if (q > (bidLevelsMap.get(lvl) || 0)) bidLevelsMap.set(lvl, q);
+                } else {
+                    bidLevelsMap.set(lvl, (bidLevelsMap.get(lvl) || 0) + q);
+                }
+                totalBidVol += q;
+            }
+
+            for (const [p, q] of asksMap.entries()) {
+                const lvl = Math.round(p / step) * step;
+                if (calcMode === 'peak') {
+                    if (q > (askLevelsMap.get(lvl) || 0)) askLevelsMap.set(lvl, q);
+                } else {
+                    askLevelsMap.set(lvl, (askLevelsMap.get(lvl) || 0) + q);
+                }
+                totalAskVol += q;
+            }
+
+            // Maximum visible volume for non-linear bar scaling (mimicking Bookmap profile)
+            let maxVisibleVol = 1;
+            for (let p = startGridLvl; p <= visiblePriceTop; p += step) {
+                const v = p > currentPrice ? (askLevelsMap.get(p) || 0) : (bidLevelsMap.get(p) || 0);
+                if (v > maxVisibleVol) maxVisibleVol = v;
+            }
+            if (maxVisibleVol < 20) maxVisibleVol = 20;
+
+            const priceColWidth = 62;
+            const volColWidth = 52;
+            const barStartX = depthX + priceColWidth + volColWidth;
+            const barMaxWidth = DEPTH_WIDTH - priceColWidth - volColWidth - 8;
+
+            const nearestCurrentLvl = Math.round(currentPrice / step) * step;
+
+            // Draw Discrete Bookmap Ladder Rows
+            for (let p = startGridLvl; p <= visiblePriceTop; p += step) {
+                const y = getY(p);
+                const rowH = pixelsPerStep;
+                const rowTop = y - (rowH / 2);
+
+                if (rowTop + rowH < 0 || rowTop > fullH) continue;
+
+                const isAsk = p > currentPrice;
+                const isNearest = (p === nearestCurrentLvl);
+
+                const qty = isAsk ? (askLevelsMap.get(p) || 0) : (bidLevelsMap.get(p) || 0);
+
+                // Bookmap style power scaling: small orders visible, 100 BTC walls peak out
+                const barRatio = qty > 0 ? Math.min(1.0, Math.pow(qty / maxVisibleVol, 0.72)) : 0;
+                const barW = barRatio > 0 ? Math.max(3, barRatio * barMaxWidth) : 0;
+
+                // 1. Row Background: Dark maroon for asks, Dark forest green for bids
+                ctx.fillStyle = isAsk ? '#290e0e' : '#082212';
+                ctx.fillRect(depthX, rowTop, DEPTH_WIDTH, rowH);
+
+                // 2. Rightward Volume Profile Bar
+                if (barW > 0) {
+                    ctx.fillStyle = isAsk ? '#d63636' : '#239454';
+                    ctx.beginPath();
+                    // Draw rounded bar extending rightward
+                    const radius = Math.min(3, rowH / 3);
+                    ctx.roundRect(barStartX, rowTop + 1, barW, rowH - 2, [0, radius, radius, 0]);
+                    ctx.fill();
+                }
+
+                // 3. Price Text Column
+                const isMajor = (p % (step * 2) === 0) || rowH >= 24;
+                if (isMajor) {
+                    ctx.fillStyle = isNearest ? '#ffffff' : '#889bb0';
+                    ctx.font = isNearest ? 'bold 11px JetBrains Mono, monospace' : '500 11px JetBrains Mono, monospace';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(p.toLocaleString('en-US'), depthX + priceColWidth - 4, y);
+                } else {
+                    // Subtle tick dot for intermediate rows
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                    ctx.beginPath();
+                    ctx.arc(depthX + priceColWidth - 8, y, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // 4. Volume Text Column
+                if (qty > 0) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '600 10.5px JetBrains Mono, monospace';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+
+                    let qLabel;
+                    if (qty >= 100) qLabel = qty.toFixed(0);
+                    else if (qty >= 10) qLabel = qty.toFixed(1);
+                    else qLabel = qty.toFixed(2);
+
+                    ctx.fillText(qLabel, depthX + priceColWidth + volColWidth - 6, y);
+                }
+
+                // Row Separator Line
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                ctx.beginPath();
+                ctx.moveTo(depthX, rowTop + rowH);
+                ctx.lineTo(depthX + DEPTH_WIDTH, rowTop + rowH);
+                ctx.stroke();
+            }
+
+            // 5. Inside Spread Marker & Current Price Badge (Bookmap Style)
+            const spreadY = getY(currentPrice);
+            if (spreadY >= 0 && spreadY <= fullH) {
+                // Inside Ask & Bid volumes shown cleanly on the chart side before the depth divider
+                ctx.font = 'bold 9px JetBrains Mono, monospace';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'bottom';
+                ctx.fillStyle = '#ff5252';
+                ctx.fillText(bestAskQty.toFixed(2), depthX - 6, spreadY - 2);
+
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#00ffa2';
+                ctx.fillText(bestBidQty.toFixed(2), depthX - 6, spreadY + 2);
+
+                // Current Price Badge: STRICTLY confined to the price column ONLY (never covers volumes or bars!)
+                const badgeH = 16;
+                const badgeTop = spreadY - (badgeH / 2);
+                const badgeW = priceColWidth - 3;
+
+                ctx.fillStyle = '#141d28';
+                ctx.fillRect(depthX + 1, badgeTop, badgeW, badgeH);
+
+                ctx.strokeStyle = '#ff9900';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(depthX + 1, badgeTop, badgeW, badgeH);
+
+                // Sharp Current Price Text
+                ctx.fillStyle = '#ff9900';
+                ctx.font = 'bold 10px JetBrains Mono, monospace';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                const pText = currentPrice.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                ctx.fillText(pText, depthX + badgeW - 3, spreadY);
+            }
+
+            // 6. Top Header of Depth Column (Imbalance Gauge)
+            const headerH = 26;
+            ctx.fillStyle = '#111722';
+            ctx.fillRect(depthX, 0, DEPTH_WIDTH, headerH);
+            ctx.strokeStyle = '#1e2636';
+            ctx.beginPath();
+            ctx.moveTo(depthX, headerH);
+            ctx.lineTo(depthX + DEPTH_WIDTH, headerH);
+            ctx.stroke();
+
+            const tot = totalBidVol + totalAskVol;
+            const bidRatio = tot > 0 ? (totalBidVol / tot) : 0.5;
+            const diffPct = Math.round((bidRatio - (1 - bidRatio)) * 100);
+            const sign = diffPct >= 0 ? '+' : '';
+
+            ctx.fillStyle = '#8fa5be';
+            ctx.font = 'bold 10px JetBrains Mono, monospace';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`DEPTH ($${step}) | ${sign}${diffPct}%`, depthX + 8, headerH / 2);
+
+            const meterW = 55;
+            const meterX = depthX + DEPTH_WIDTH - meterW - 8;
+            const meterY = (headerH - 6) / 2;
+            const meterH = 6;
+
+            ctx.fillStyle = '#2a3342';
+            ctx.fillRect(meterX, meterY, meterW, meterH);
+
+            const bidW = meterW * bidRatio;
+            ctx.fillStyle = '#00e676';
+            ctx.fillRect(meterX, meterY, bidW, meterH);
+            ctx.fillStyle = '#ff3344';
+            ctx.fillRect(meterX + bidW, meterY, meterW - bidW, meterH);
+
+            // 7. Bottom Right Circular CVD Speedometer (Bookmap Style)
+            drawCircularCvdGauge(depthX + DEPTH_WIDTH - 50, fullH - 40, 24);
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        /**
+         * Authentic Circular CVD Speedometer Dial (Bookmap bottom-right)
+         */
+        function drawCircularCvdGauge(cx, cy, r) {
+            ctx.save();
+
+            // Background Arc
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
+            ctx.strokeStyle = '#1a2332';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Value Arc
+            const val = runningCvd;
+            const maxRange = 100;
+            const norm = Math.max(-1, Math.min(1, val / maxRange));
+            const startAngle = 1.5 * Math.PI;
+            const targetAngle = startAngle + (norm * 0.75 * Math.PI);
+
+            ctx.beginPath();
+            if (norm >= 0) {
+                ctx.arc(cx, cy, r, startAngle, targetAngle, false);
+                ctx.strokeStyle = '#00e676';
+            } else {
+                ctx.arc(cx, cy, r, targetAngle, startAngle, false);
+                ctx.strokeStyle = '#ff4d4d';
+            }
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // Value Text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 9px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val.toFixed(1), cx, cy - 2);
+
+            ctx.fillStyle = '#ff7a89';
+            ctx.font = '8px Outfit, sans-serif';
+            ctx.fillText('CVD', cx, cy + 9);
+
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
